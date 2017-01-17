@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--bulid.xml 内容如下-->
+<project name="junit-test" default="unit-test-report">
+
+    <!-- 源码目录  -->
+    <property name="src.main.dir" location="${basedir}/src/main/java" />
+    <property name="src.test.dir" location="${basedir}/src/test/java" />
+
+    <!-- 编译目录  -->
+    <property name="target.classes.dir" location="${basedir}/target/classes" />
+    <property name="target.test-classes.dir" location="${basedir}/target/test-classes" />
+
+    <!-- jar目录  -->
+    <property name="junit.lib.dir" location="${basedir}/src/main/webapp/WEB-INF/lib" />
+
+    <!-- 报告目录  -->
+    <property name="target.report.dir" location="${basedir}/target" />
+    <property name="target.unit-test-report.dir" location="${target.report.dir}/junit-report" />
+
+    <!-- 编译测试类依赖的classpath  -->
+    <path id="app.classpath">
+        <fileset dir="${junit.lib.dir}">
+            <include name="*.jar" />
+        </fileset>
+    </path>
+
+
+    <!-- 运行测试类需要的classpath -->
+    <path id="app.test.classpath">
+        <path location="${target.test-classes.dir}" />
+    </path>
+
+    <!-- 删除旧的测试目录及文件 -->
+    <target name="clean">
+        <delete dir="${target.classes.dir}" />
+        <delete dir="${target.test-classes.dir}" />
+        <delete dir="${target.unit-test-report.dir}" />
+    </target>
+
+
+    <!-- 编译源文件 -->
+    <target name="compile-java" depends="clean">
+        <mkdir dir="${target.classes.dir}" />
+
+        <!-- 编译源文件目录，编译目标目录 -->
+        <javac debug="on" destdir="${target.classes.dir}" includeantruntime="on" source="1.6"
+            srcdir="${src.main.dir}">
+            <classpath refid="app.classpath"></classpath>
+        </javac>
+    </target>
+
+
+    <!-- 编译测试文件 -->
+    <target name="compile-test" depends="compile-java">
+        <mkdir dir="${target.test-classes.dir}" />
+
+        <!-- 编译源文件目录，编译目标目录 -->
+        <javac debug="on" destdir="${target.test-classes.dir}" includeantruntime="on" source="1.6"
+            srcdir="${src.test.dir}">
+            <classpath refid="app.test.classpath"></classpath>
+        </javac>
+
+        <!-- 拷贝测试类路径下的配置文件 -->
+        <copy todir="${target.test-classes.dir}">
+            <fileset dir="${src.test.dir}">
+                <include name="**/*.properties" />
+                <include name="**/*.xml" />
+            </fileset>
+        </copy>
+    </target>
+
+
+    <!-- 运行测试类 -->
+    <target name="run-unit-test" depends="compile-test">
+        <mkdir dir="${target.unit-test-report.dir}" />
+
+        <!-- 设置运行失败是是否继续执行 （如果为true，则导出报表也会失败）  -->
+        <junit fork="on" haltonerror="off" haltonfailure="off" printsummary="on">
+
+            <!-- 输出格式  -->
+            <formatter type="plain" usefile="off" />
+            <formatter type="xml" usefile="on" />
+
+            <!-- 单个测试 -->
+            <!--<test name="com.zf.test.HelloTest"></test> -->
+            <!-- 批量测试  -->
+
+            <batchtest todir="${target.unit-test-report.dir}">
+                <fileset dir="${target.test-classes.dir}">
+                    <!--<include name="**/*Test.class" />-->
+                    <include name="AssertTests.class" />
+                </fileset>
+            </batchtest>
+
+            <!-- 类路径  -->
+            <classpath refid="app.classpath" />
+            <classpath refid="app.test.classpath"/>
+        </junit>
+    </target>
+
+    <!-- 单元测试报告 -->
+    <target name="unit-test-report" depends="run-unit-test">
+        <mkdir dir="${target.unit-test-report.dir}/html" />
+        <junitreport todir="${target.unit-test-report.dir}">
+            <fileset dir="${target.unit-test-report.dir}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report format="frames" todir="${target.unit-test-report.dir}/html" />
+        </junitreport>
+    </target>
+
+    <!--从其他地方来的-->
+    <target name="run">
+        <junit>
+            <classpath refid="appclasspath"/>
+            <classpath>
+                <pathelement location="${base.dir}/defaultroot/WEB-INF/classes"/>
+            </classpath>
+            <formatter type="xml"/>
+            <test name="test.AllTests" haltonfailure="no" outfile="result"/>
+        </junit>
+        <junitreport todir="./report">
+            <fileset dir=".">
+                <include name="result.xml"/>
+            </fileset>
+            <report format="noframes" todir="./report"/>
+        </junitreport>
+    </target>
+
+</project>
+
